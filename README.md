@@ -8,7 +8,7 @@ Arrow Tracker keeps track of your target archery training scores and organizes y
 
 ## Demo
 
-- [Live Demo](https://arrow-tracker.herokuapp.com/)<br/>
+- [Live Demo](https://www.arrow-tracker.com/)<br/>
   Click demo link on the intro page to login as demo user.
 
 ## Links
