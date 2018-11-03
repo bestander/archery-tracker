@@ -1,5 +1,28 @@
 import React from "react";
-import target from "./target.png";
+
+const styles = {
+  targetContainer: {
+    display: "flex",
+    width: "100%",
+    justifyContent: "center"
+  },
+  zoomContainer: {
+    touchAction: "none",
+    overflow: "hidden",
+    display: "flex"
+  },
+  panContainer: {
+    display: "flex",
+    justifyContent: "center"
+  },
+  targetRing: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: "50%",
+    border: "1px solid black"
+  }
+};
 
 export default class Target extends React.Component {
   constructor(props) {
@@ -14,72 +37,166 @@ export default class Target extends React.Component {
   }
 
   componentDidUpdate() {
-    this.context = this.canvas.getContext("2d");
-    this.doCanvas();
+    // this.context = this.canvas.getContext("2d");
+    // this.doCanvas();
   }
 
+  ZOOM = 2;
+
   render() {
-    return <canvas ref={this.setCanvasRef} width="300" height="300" />;
+    const outerRingMaxRadius = this.targetScoreRange[
+      this.targetScoreRange.length - 1
+    ].maxRadius;
+    let outerRing;
+    this.targetScoreRange.forEach(score => {
+      outerRing = (
+        <div
+          style={{
+            height: `${score.maxRadius * this.ZOOM}px`,
+            width: `${score.maxRadius * this.ZOOM}px`,
+            backgroundColor: score.color,
+            ...styles.targetRing
+          }}
+          onMouseUp={event => {
+            event.stopPropagation();
+            const pos = this.getMousePos(this.targetPanWrapper, event);
+            const shot = { x: pos.x / this.ZOOM, y: pos.y / this.ZOOM };
+            console.log("shoot", score.points, shot);
+          }}
+          onTouchMove={event => {
+            // console.log("TOCUH MOVE", score.points)
+          }}
+          onTouchEnd={event => {
+            // console.log(event.target)
+          }}
+        >
+          {outerRing}
+        </div>
+      );
+    });
+
+    return (
+      <div style={styles.targetContainer}>
+        <div
+          style={styles.zoomContainer}
+          ref={elem => {
+            this.targetZoomWrapper = elem;
+          }}
+          onMouseMove={event => {
+            const pos = this.getMousePos(this.targetZoomWrapper, event);
+            const adjustedX = (outerRingMaxRadius - pos.x) / 1.5;
+            const adjustedY = (outerRingMaxRadius - pos.y) / 1.5;
+            this.targetPanWrapper.style.transform = `scale(${
+              this.ZOOM
+            }) translateX(${adjustedX}px) translateY(${adjustedY}px)`;
+          }}
+          onMouseLeave={event => {
+            this.targetPanWrapper.style.transform = "scale(1)";
+          }}
+          onTouchMove={event => {
+            // this is to prevent scrolling on iOS
+            // event.preventDefault();
+            // Ignore multi touch events
+            if (event.touches.length > 1) {
+              return;
+            }
+            // this.touchMove = true;
+            var pos = this.getTouchPos(this.targetZoomWrapper, event);
+            const adjustedX = (outerRingMaxRadius - pos.x) / 1.5;
+            const adjustedY = (outerRingMaxRadius - pos.y) / 1.5;
+            this.targetPanWrapper.style.transform = `scale(${
+              this.ZOOM
+            }) translateX(${adjustedX}px) translateY(${adjustedY}px)`;
+          }}
+          onTouchEnd={event => {
+            event.stopPropagation();
+            var touches = event.changedTouches;
+            // const pos = this.getTouchPos(this.targetZoomWrapper, event);
+            // const shot = { x: pos.x / this.ZOOM, y: pos.y / this.ZOOM };
+            console.log("shoot", touches);
+          }}
+        >
+          <div
+            style={styles.panContainer}
+            ref={elem => {
+              this.targetPanWrapper = elem;
+            }}
+          >
+            {outerRing}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   centerPoint = { x: 150, y: 150 };
   touchCursorOffset = 100;
   targetScoreRange = [
     {
+      color: "#ffc107",
       minRadius: 0,
       maxRadius: 15,
       invert: false,
       points: 10
     },
     {
+      color: "#ffc107",
       minRadius: 16,
       maxRadius: 30,
       invert: false,
       points: 9
     },
     {
+      color: "#dc3545",
       minRadius: 31,
       maxRadius: 45,
       invert: false,
       points: 8
     },
     {
+      color: "#dc3545",
       minRadius: 46,
       maxRadius: 60,
       invert: false,
       points: 7
     },
     {
+      color: "#17a2b8",
       minRadius: 61,
       maxRadius: 75,
       invert: false,
       points: 6
     },
     {
+      color: "#17a2b8",
       minRadius: 76,
       maxRadius: 90,
       invert: false,
       points: 5
     },
     {
+      color: "black",
       minRadius: 91,
       maxRadius: 105,
       invert: true,
       points: 4
     },
     {
+      color: "black",
       minRadius: 106,
       maxRadius: 120,
       invert: true,
       points: 3
     },
     {
+      color: "white",
       minRadius: 121,
       maxRadius: 135,
       invert: false,
       points: 2
     },
     {
+      color: "white",
       minRadius: 136,
       maxRadius: 150,
       invert: false,
@@ -96,7 +213,7 @@ export default class Target extends React.Component {
   touchMove = false;
 
   initTarget() {
-    this.context = this.canvas.getContext("2d");
+    // this.context = this.canvas.getContext("2d");
     this.makeBase();
   }
 
@@ -127,9 +244,9 @@ export default class Target extends React.Component {
   }
 
   handleMouseUp(e) {
-    const pos = this.getMousePos(this.canvas, e);
-    const newArrow = this.generatePointOnTarget(pos, false);
-    this.props.createArrow(newArrow);
+    // const pos = this.getMousePos(this.canvas, e);
+    // const newArrow = this.generatePointOnTarget(pos, false);
+    // this.props.createArrow(newArrow);
   }
 
   handleTouchEnd(event) {
@@ -246,61 +363,60 @@ export default class Target extends React.Component {
   }
 
   makeBase() {
-    this.base_image = new Image();
-    this.base_image.src = target;
-
-    this.base_image.onload = () => {
-      this.iw = 600;
-      this.ih = 600;
-      this.canvas.width = this.iw * this.zoom;
-      this.canvas.height = this.ih * this.zoom;
-      this.zoomFactor = (600 - 600 * this.zoom) / this.canvas.width;
-      this.doCanvas();
-
-      //redraw canvas at default zoom
-      this.canvas.addEventListener(
-        "mouseout",
-        () => {
-          this.doCanvas();
-        },
-        false
-      );
-      // show zoomed canvas
-      this.canvas.addEventListener(
-        "mousemove",
-        event => {
-          this.handleMouseMove(event);
-        },
-        false
-      );
-      // draw dot
-      this.canvas.addEventListener(
-        "mouseup",
-        event => {
-          this.handleMouseUp(event);
-        },
-        false
-      );
-      //show zoomed canvas mobile
-
-      this.canvas.addEventListener(
-        "touchmove",
-        throttle(event => {
-          this.handleTouchMove(event);
-        }, 16),
-
-        true
-      );
-      // draw dot
-
-      this.canvas.addEventListener(
-        "touchend",
-        event => {
-          this.handleTouchEnd(event);
-        },
-        false
-      );
-    };
+    // this.base_image = new Image();
+    // this.base_image.src = target;
+    // this.base_image.onload = () => {
+    //   this.iw = 600;
+    //   this.ih = 600;
+    //   this.canvas.width = this.iw * this.zoom;
+    //   this.canvas.height = this.ih * this.zoom;
+    //   this.zoomFactor = (600 - 600 * this.zoom) / this.canvas.width;
+    //   this.doCanvas();
+    //
+    //   //redraw canvas at default zoom
+    //   this.canvas.addEventListener(
+    //     "mouseout",
+    //     () => {
+    //       this.doCanvas();
+    //     },
+    //     false
+    //   );
+    //   // show zoomed canvas
+    //   this.canvas.addEventListener(
+    //     "mousemove",
+    //     event => {
+    //       this.handleMouseMove(event);
+    //     },
+    //     false
+    //   );
+    //   // draw dot
+    //   this.canvas.addEventListener(
+    //     "mouseup",
+    //     event => {
+    //       this.handleMouseUp(event);
+    //     },
+    //     false
+    //   );
+    //   //show zoomed canvas mobile
+    //
+    //   this.canvas.addEventListener(
+    //     "touchmove",
+    //     throttle(event => {
+    //       this.handleTouchMove(event);
+    //     }, 16),
+    //
+    //     true
+    //   );
+    //   // draw dot
+    //
+    //   this.canvas.addEventListener(
+    //     "touchend",
+    //     event => {
+    //       this.handleTouchEnd(event);
+    //     },
+    //     false
+    //   );
+    // };
   }
 }
 
